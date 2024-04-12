@@ -1,5 +1,7 @@
 # Dorothy - A Minimalist LoRa Sensor Platform
 
+![Images of the Dorothy Sensor Platform](images/trio.jpeg)
+
 Dorothy is a minimalist, open-source, low-cost sensor platform built around the LoRa protocol. It uses the
 [CubeCell V2](https://heltec.org/project/htcc-ab01-v2/) board and common off-the-shelf [sensors](#sensor) to deliver
 readings to a central [hub](#hub), and only needs to be recharged about once per year.
