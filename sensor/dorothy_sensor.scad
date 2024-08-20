@@ -30,8 +30,8 @@ use <threads.scad>
 // Parts
 render_outer_shell = 0;
 render_brain = 0;
-render_standoffs = 1;
-brain_type = "soil_moisture";  // distance, temperature_humidity, or soil_moisture
+render_caddy = 1;
+brain_type = "temperature_humidity";  // distance, temperature_humidity, or soil_moisture
 
 
 // Adjustable dimensions
@@ -72,7 +72,7 @@ height = battery_pack_height
 offset = width * 2.25;
 if (render_brain) translate([0, 0, 0]) brain();
 if (render_outer_shell) translate([offset, 0, 0]) outer_shell();
-if (render_standoffs) translate([20, 0, 0]) cubecell_standoffs();
+if (render_caddy) translate([20, 0, 0]) caddy();
 
 module brain() {
     if (brain_type == "distance") brain_distance();
@@ -263,43 +263,41 @@ module sled(bh=board_height) {
     }
 }
 
-module cubecell_standoffs() {
-    $fn = 50;
-    r = 2;
-    h = 12;
-    t = 1.2 / 2;
+module caddy(bh=board_height) {
+    // A snap-fit "caddy" that is designed to secure the cubecell to the "sled".
+    // It secures at the corners, but gives the board some breathing room so that you 
+    // may easily remove the battery connector, antenna, GPIO connections, etc.
+    d = 3;
+    t = 0.6;
     
-    // Outer snap-fit
-    difference() {
-        union() {
-            cylinder(h, r=r);
-            translate([0, 0, h]) rotate([0, 180]) annular_snap_fit(r, 0);
-        }
-        cylinder(h, r=r-t);
-        annular_snap_fit(r-t*2, 0.6);
+        
+    bw = board_width + d + t;
+    bd = board_depth;
+    
+    h = seal_height;
+    w = width;
+    
+    radius = 1;
+    ww = 6;
+    wd = 6;
+    f = fit_tolerance;
+    
+    cx = 18.92;
+    cy = 36.71;
+    
+    rotate([90, 180, 0]) roundedcube([bw-3, bd-3, bh-2], radius=radius, true);
+    
+    rotate([90, 180, 0]) difference() {
+        translate([0, 0, 3]) roundedcube([bw, bd, bh], radius=radius, true);
+        scale(1.04) sled();
+                    
+        // Slice 4mm off bottom of roundedcube so that everything lines up nicely
+        translate([0, 0, -bh+2]) cube([bw + wd * 2, bd, bh], true);
+        
+        // Mounting holes for CubeCell
+        translate([0, 0, 3]) rotate([90, 0, 0]) standoffs(1, 10, cx, cy);
     }
-    
-    // Inner snap-fit
-    translate([15, 0]) difference() {
-        r = r-1;
-        h = 1;
-        union() {
-            cylinder(h+2, r=r);
-            translate([0, 0, h+2]) rotate([0, 180]) annular_snap_fit(r, 0);
-            cylinder(1, r=r*2);
-        }
-        cylinder(h, r=r-t);
-    }
-}
 
-module annular_snap_fit(r1, t=0) {
-    h1 = r1 * 0.7 + t;
-    h2 = r1 * 0.3 + t;
-    r2 = r1 + 0.5 + t;
-
-    
-    cylinder(h1, r1, r2);
-    translate([0, 0, h1]) cylinder(h2, r2, r1);
 }
 
 module sled_mount(sw, sh) {
@@ -329,22 +327,6 @@ module outer_shell(){
             domed_cylinder(h-t,w);
         }
     }
-}
-
-module clips(height, width) {
-    x = height / 2;
-    y = width / 2;
-    
-    union() { 
-        translate([x, y]) clip();
-        translate([x, -y]) rotate([0, 0, 180])  clip();
-        translate([-x, y]) clip();
-        translate([-x, -y]) rotate([0, 0, 180])  clip();
-    }
-}
-
-module clip() {
-    translate([-2, 0]) rotate([90, 0, 90]) linear_extrude(4) polygon([[2,9],[1,10],[-2,9],[-2,8],[-1,8],[0,7],[-1,6],[-1,-2],[1,-2]]);
 }
 
 module standoffs(r, depth, height, width) {
