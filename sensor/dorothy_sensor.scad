@@ -28,8 +28,8 @@ With more on the way!
 use <threads.scad>
 
 // Parts
-render_outer_shell = 1;
-render_brain = 1;
+render_outer_shell = 0;
+render_brain = 0;
 render_standoffs = 1;
 brain_type = "soil_moisture";  // distance, temperature_humidity, or soil_moisture
 
@@ -264,11 +264,42 @@ module sled(bh=board_height) {
 }
 
 module cubecell_standoffs() {
-    h = 8;
+    $fn = 50;
+    r = 2;
+    h = 12;
+    t = 1.2 / 2;
+    
+    // Outer snap-fit
     difference() {
-        standoffs(1.2+thickness, h, 5, 5);
-        standoffs(1.2, h, 5, 5);
+        union() {
+            cylinder(h, r=r);
+            translate([0, 0, h]) rotate([0, 180]) annular_snap_fit(r, 0);
+        }
+        cylinder(h, r=r-t);
+        annular_snap_fit(r-t*2, 0.6);
     }
+    
+    // Inner snap-fit
+    translate([15, 0]) difference() {
+        r = r-1;
+        h = 1;
+        union() {
+            cylinder(h+2, r=r);
+            translate([0, 0, h+2]) rotate([0, 180]) annular_snap_fit(r, 0);
+            cylinder(1, r=r*2);
+        }
+        cylinder(h, r=r-t);
+    }
+}
+
+module annular_snap_fit(r1, t=0) {
+    h1 = r1 * 0.7 + t;
+    h2 = r1 * 0.3 + t;
+    r2 = r1 + 0.5 + t;
+
+    
+    cylinder(h1, r1, r2);
+    translate([0, 0, h1]) cylinder(h2, r2, r1);
 }
 
 module sled_mount(sw, sh) {
